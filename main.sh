@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 
+cd /
+
 unzip aoi.zip
 
-# cd /volume
+ls -l
 
 python3 0_Download_data.py
 

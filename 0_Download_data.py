@@ -17,9 +17,6 @@ import warnings
 import geopandas as gpd
 
 # ================= SETTINGS =========================================
-# specify directory (volume conected via docker)
-directory = 'volume'
-
 # specify AOI in the form of a shapefile
 shpName = 'aoi.shp'
 
@@ -27,8 +24,7 @@ shpName = 'aoi.shp'
 
 
 # ================= MAIN PROGRAM ======================================
-
-volume = pathlib.Path(directory)
+volume = pathlib.Path('/')
 shp_file_path = volume / pathlib.Path(shpName)
 
 # open shapefile with geopandas
@@ -91,7 +87,7 @@ def get_shape_from_rest(xmin, ymin, xmax, ymax, pixelSize, filename, service_nam
 
     ResponseObj = response.read()
 
-    out = open(str( volume / pathlib.Path(filename + '.tif')), "wb")
+    out = open(str(pathlib.Path(filename + '.tif')), "wb")
     out.write(ResponseObj)
     out.close()
 
