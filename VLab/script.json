@@ -1,0 +1,29 @@
+{
+  "scripts": [
+    {
+      "repoPath": "main.sh",
+      "targetPath": "main.sh",
+      "pathType": "FILE"
+ },
+    {
+      "repoPath": "1_HRL_CLC_Mosaic_Clip.py",
+      "targetPath": "1_HRL_CLC_Mosaic_Clip.py",
+      "pathType": "FILE"
+ },
+    {
+      "repoPath": "2_City_Area.py",
+      "targetPath": "2_City_Area.py",
+      "pathType": "FILE"
+ },
+    {
+      "repoPath": "3_OSM_Layers.py",
+      "targetPath": "3_OSM_Layers.py",
+      "pathType": "FILE",
+},
+    {
+      "repoPath": "4_Index_calculation.py",
+      "targetPath": "4_Index_calculation.py",
+      "pathType": "FILE"
+}
+  ]
+}

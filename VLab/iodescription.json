@@ -1,0 +1,53 @@
+{
+  "inputs": [
+  {
+      "id": "DataObject_0h3a3ff",
+      "inputType": "individual",
+      "valueType": "value",
+      "description": "URL to the AOI shapefile as zip",
+      "name": "AOI shapefile as zip",
+      "obligation": true,
+      "hasDefault": false,
+      "valueSchema": "url",
+      "target": "aoi.zip"
+ }
+  ],
+  "outputs": [
+    {
+      "id": "DataObject_0n95v5p",
+      "outputType": "individual",
+      "valueType": "value",
+      "description": "Urban cluster built-up area",
+      "name": "Urban cluster built-up area",
+      "valueSchema": "url",
+      "target": "8-URBAN_CLUSTER_BUA.tif.tif"
+ },
+    {
+      "id": "DataObject_0n95v5p-1",
+      "outputType": "individual",
+      "valueType": "value",
+      "description": "Public open areas by Open Street Maps",
+      "name": "Urban cluster built-up area",
+      "valueSchema": "url",
+      "target": "9-osm_open_areas.tif"
+ },
+    {
+      "id": "DataObject_0n95v5p-1",
+      "outputType": "individual",
+      "valueType": "value",
+      "description": "Land allocated to streets by Open Street Maps",
+      "name": "Land allocated to streets by Open Street Maps",
+      "valueSchema": "url",
+      "target": "10-osm_roads.tif"
+},
+    {
+      "id": "DataObject_0n95v5p-1",
+      "outputType": "individual",
+      "valueType": "value",
+      "description": "Results of calculated indicator",
+      "name": "Results of calculated indicator",
+      "valueSchema": "url",
+      "target": "11-results.txt"
+  }
+  ]
+}
