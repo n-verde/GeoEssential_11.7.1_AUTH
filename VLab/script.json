@@ -23,7 +23,7 @@
     {
       "repoPath": "3_OSM_Layers.py",
       "targetPath": "3_OSM_Layers.py",
-      "pathType": "FILE",
+      "pathType": "FILE"
 },
     {
       "repoPath": "4_Index_calculation.py",
