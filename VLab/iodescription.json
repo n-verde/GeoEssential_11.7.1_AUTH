@@ -20,7 +20,7 @@
       "description": "Urban cluster built-up area",
       "name": "Urban cluster built-up area",
       "valueSchema": "url",
-      "target": "8-URBAN_CLUSTER_BUA.tif.tif"
+      "target": "8-URBAN_CLUSTER_BUA.tif"
  },
     {
       "id": "DataObject_0n95v5p-1",
@@ -32,7 +32,7 @@
       "target": "9-osm_open_areas.tif"
  },
     {
-      "id": "DataObject_0n95v5p-1",
+      "id": "DataObject_0n95v5p-2",
       "outputType": "individual",
       "valueType": "value",
       "description": "Land allocated to streets by Open Street Maps",
@@ -41,7 +41,7 @@
       "target": "10-osm_roads.tif"
 },
     {
-      "id": "DataObject_0n95v5p-1",
+      "id": "DataObject_0g2b5cc",
       "outputType": "individual",
       "valueType": "value",
       "description": "Results of calculated indicator",

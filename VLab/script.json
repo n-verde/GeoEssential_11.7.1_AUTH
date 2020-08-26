@@ -6,8 +6,13 @@
       "pathType": "FILE"
  },
     {
-      "repoPath": "1_HRL_CLC_Mosaic_Clip.py",
-      "targetPath": "1_HRL_CLC_Mosaic_Clip.py",
+      "repoPath": "0_Download_data.py",
+      "targetPath": "0_Download_data.py",
+      "pathType": "FILE"
+ },
+    {
+      "repoPath": "1_CLC_Clip.py",
+      "targetPath": "1_CLC_Clip.py",
       "pathType": "FILE"
  },
     {
