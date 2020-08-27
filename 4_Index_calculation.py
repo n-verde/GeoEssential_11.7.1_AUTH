@@ -104,9 +104,9 @@ def main():
 
     # =================
     # 1.1 reproject urban_aggl to match OSM files
-    urban_aggl_path =  volume / pathlib.Path('7-bounds.shp')
-    open_areas_path =  volume / pathlib.Path('9-osm_open_areas.shp')
-    roads_path =  volume / pathlib.Path('10-osm_roads.shp')
+    urban_aggl_path = volume / pathlib.Path('7-bounds.shp')
+    open_areas_path = volume / pathlib.Path('9-osm_open_areas.shp')
+    roads_path = volume / pathlib.Path('10-osm_roads.shp')
 
     urban_aggl = gpd.read_file(str(urban_aggl_path))
     open_areas = gpd.read_file(str(open_areas_path))
@@ -144,8 +144,8 @@ def main():
     open_areas_ext, out_transform = rasterio.mask.mask(raster, coords, crop=True)
     out_meta.update({"driver": "GTiff", "height": open_areas_ext.shape[1], "width": open_areas_ext.shape[2],
                      "transform": out_transform})
-    # with rasterio.open(str(volume / pathlib.Path('test.tif')), "w", **out_meta) as dest:  # replace file with clipped one
-    #     dest.write(open_areas_ext)
+    with rasterio.open(str(volume / pathlib.Path(str(open_areas_path)[0:-4] + '.tif')), "w", **out_meta) as dest:  # replace file with clipped one
+        dest.write(open_areas_ext)
 
     # land allocated to streets
     raster = rasterio.open(str(roads_path)[0:-4] + '.tif')
@@ -153,8 +153,8 @@ def main():
     roads_ext, out_transform = rasterio.mask.mask(raster, coords, crop=True)
     out_meta.update({"driver": "GTiff", "height": roads_ext.shape[1], "width": open_areas_ext.shape[2],
                      "transform": out_transform})
-    # with rasterio.open(str(volume / pathlib.Path('test.tif')), "w", **out_meta) as dest:  # replace file with clipped one
-    #     dest.write(roads_ext)
+    with rasterio.open(str(volume / pathlib.Path(str(roads_path)[0:-4] + '.tif')), "w", **out_meta) as dest:  # replace file with clipped one
+        dest.write(roads_ext)
 
     # =================
     # 1.4 calculate total surface of open areas and roads in urban agglomeration
@@ -168,7 +168,7 @@ def main():
 
     # open areas
     open_areas_pixels_sum = np.sum(open_areas_ext[0])
-    open_areas_area = open_areas_pixels_sum / (1000*1000) # pixel size = 1m, calculate in square km
+    open_areas_area = open_areas_pixels_sum / (1000*1000)  # pixel size = 1m, calculate in square km
     print("TOTAL AREA OF OPEN AREAS: {x} square km".format(x=open_areas_area))
 
     # roads (land allocated to streets)
@@ -185,7 +185,7 @@ def main():
     urb_bua[0][urb_bua[0]!=1] = 0 # change the values because rasterio reads it as uint8
     # count pixels that are =1
     bua_pixels_sum = np.sum(urb_bua[0])
-    bua_area = (bua_pixels_sum * (10 * 10)) / (1000*1000) # pixel size = 10m, calculate in square km
+    bua_area = (bua_pixels_sum * (10 * 10)) / (1000*1000)  # pixel size = 10m, calculate in square km
 
     print("TOTAL BUILT-UP AREA OF URBAN AGGLOMERATION: {x} square km".format(x=bua_area))
 
@@ -195,7 +195,7 @@ def main():
 
     i = ((open_areas_area + LAS_area) / bua_area) * 100
 
-    print("Value for SDG indicator 11.7.1: {v} %".format(v=i))
+    print("Value for SDG indicator 11.7.1: {:.2{v}} %".format(v=i))
 
     print("----------")
     print("----------")
