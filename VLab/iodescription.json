@@ -14,7 +14,7 @@
   ],
   "outputs": [
     {
-      "id": "DataObject_0n95v5p",
+      "id": "URBAN_CLUSTER_BUA.tif",
       "outputType": "individual",
       "valueType": "value",
       "description": "Urban cluster built-up area (.tif)",
@@ -23,7 +23,7 @@
       "target": "8-URBAN_CLUSTER_BUA.tif"
  },
     {
-      "id": "DataObject_0n95v5p-1",
+      "id": "osm_open_areas.tif",
       "outputType": "individual",
       "valueType": "value",
       "description": "Public open areas by Open Street Maps (.tif)",
@@ -32,7 +32,7 @@
       "target": "9-osm_open_areas.tif"
  },
     {
-      "id": "DataObject_0n95v5p-2",
+      "id": "osm_roads.tif",
       "outputType": "individual",
       "valueType": "value",
       "description": "Land allocated to streets by Open Street Maps (.tif)",
@@ -41,7 +41,7 @@
       "target": "10-osm_roads.tif"
 },
     {
-      "id": "DataObject_0g2b5cc",
+      "id": "11.7.1_results.txt",
       "outputType": "individual",
       "valueType": "value",
       "description": "Results of calculated indicator (.txt)",
