@@ -255,9 +255,9 @@ def main():
 
     print("Finding level of urban-ness with walking window and UN instructions ...")
 
-    # 1km is 50 pixels in the 20m-pixel size of HRL
-    # create a kernel of 50 pixels
-    kernel = np.ones((50,50),np.uint32)
+    # 1km is 100 pixels in the 10m-pixel size of HRL
+    # create a kernel of 100 pixels
+    kernel = np.ones((100,100),np.uint32)
 
     # cast img to np.uint32
     img32 = clc_hrl_urban.astype(np.uint32)
@@ -265,11 +265,11 @@ def main():
     # do the convolution to get neighborhood sum
     c = convolve(img32, kernel, mode='constant')
 
-    # in the binary built-up image, 100% built-up means neighborhood sum for each pixel = 2500
-    # >=25% means sum 2500/4 >= 500
-    # threshold to 500 to get urban cluster
+    # in the binary built-up image, 100% built-up means neighborhood sum for each pixel = 10000
+    # >=25% means sum 10000/4 >= 2500
+    # threshold to 2500 to get urban cluster
     thresh = copy.copy(c)
-    thresh[thresh<500] = 0
+    thresh[thresh<2500] = 0
     del c, img32
 
     print("done.")
