@@ -161,6 +161,14 @@ def main():
 
     print("Calculating areas ...")
 
+    print("done.")
+
+    print("----------")
+    print("----------")
+    print("Successfully finished process for SDG indicator 11.7.1 calculation.")
+    print("----------")
+    print("----------")
+
     # ALSO CREATE A TEXT FILE TO SAVE PRINTS!
     sys.stdout = open(str(directory / pathlib.Path('11-results.txt')), 'w')
 
@@ -193,9 +201,10 @@ def main():
 
     # 3 calculate final index
 
-    i = ((open_areas_area + LAS_area) / bua_area) * 100
+    i = ((open_areas_area + LAS_area) / bua_area)
+    perc = "{:.2%}".format(i)
 
-    print("Value for SDG indicator 11.7.1: {:.2{v}} %".format(v=i))
+    print("Value for SDG indicator 11.7.1: {v}".format(v=perc))
 
     print("----------")
     print("----------")
