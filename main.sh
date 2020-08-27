@@ -2,11 +2,13 @@
 
 unzip aoi.zip
 
+# ls -l
+
 python3 0_Download_data.py
 
 python3 1_CLC_Clip.py
 
-ls -l
+# ls -l
 
 python3 2_City_Area.py
 
