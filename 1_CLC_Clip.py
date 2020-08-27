@@ -10,6 +10,7 @@
 
 # ============== IMPORTS =============================================
 import pathlib
+import requests
 
 import ogr, osr, gdal
 import rasterio.mask
@@ -34,8 +35,15 @@ def main():
     CLC_fileName = 'CLC2018_1,2,3,10,11.tif'  # made by NV. Only contains urban classes (1,2,3,10,11)
 
     # ================= MAIN PROGRAM ======================================
+
     volume = pathlib.Path(directory)
     shp_file_path = volume / pathlib.Path(shpName)
+
+    # download the CLC edited image
+    url = 'https://github.com/n-verde/GeoEssential_11.7.1_AUTH/raw/master/CLC2018_1%2C2%2C3%2C10%2C11.tif'
+    r = requests.get(url)
+    with open(str(volume / pathlib.Path(CLC_fileName)), 'wb') as f:
+        f.write(r.content)
     clc_path = pathlib.Path(CLC_fileName)
 
     # -------------------------
