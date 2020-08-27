@@ -59,7 +59,11 @@ RUN pip3 install pathlib==1.0.1 \
 				setuptools==41.2 \
 				utm-zone==1.0.1 \
 				opencv-contrib-python-headless==4.4.0.42 \
-				libtiff==0.4.2
+				libtiff==0.4.2 \
+				requests==2.7.0 \
+				geojson==2.5.0
+
+RUN mkdir volume
 
 # To save your container as a docker image, open a new terminal and:
 # 1. build the dockerfile to an image with tag "nverde/11.7.1:0.1"

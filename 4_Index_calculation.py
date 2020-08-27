@@ -20,11 +20,6 @@ import geopandas as gpd
 import gdal
 import ogr
 
-# ================= SETTINGS =========================================
-# specify directory (volume conected via docker)
-# HRL tiles for all europe exist in this folder
-directory = 'volume'
-
 # ================= FUNCTIONS =========================================
 
 def raster2array(geotif_file):
@@ -93,114 +88,122 @@ def getFeatures(gdf):
     import json
     return [json.loads(gdf.to_json())['features'][0]['geometry']]
 
-# ================= MAIN PROGRAM ======================================
+def main():
 
-volume = pathlib.Path(directory)
-urb_bua_path = volume / pathlib.Path('8-URBAN_CLUSTER_BUA.tif')
+    # ================= SETTINGS =========================================
+    # specify directory (volume conected via docker)
+    directory = ''
 
-# ================= ================= =================
+    # ================= MAIN PROGRAM ======================================
+    volume = pathlib.Path(directory)
+    urb_bua_path = volume / pathlib.Path('8-URBAN_CLUSTER_BUA.tif')
 
-# 1. calculate total surface of open public space + land allocated to streets
+    # ================= ================= =================
 
-# =================
-# 1.1 reproject urban_aggl to match OSM files
-urban_aggl_path =  volume / pathlib.Path('7-bounds.shp')
-open_areas_path =  volume / pathlib.Path('9-osm_open_areas.shp')
-roads_path =  volume / pathlib.Path('10-osm_roads.shp')
+    # 1. calculate total surface of open public space + land allocated to streets
 
-urban_aggl = gpd.read_file(str(urban_aggl_path))
-open_areas = gpd.read_file(str(open_areas_path))
-# reproject urban agglomeration to same projection as open areas
-urban_aggl = urban_aggl.to_crs(open_areas.crs)
-# urban_aggl = urban_aggl.assign(VALUE=1)
-urban_aggl.to_file(str(urban_aggl_path)) # replace file
+    # =================
+    # 1.1 reproject urban_aggl to match OSM files
+    urban_aggl_path =  volume / pathlib.Path('7-bounds.shp')
+    open_areas_path =  volume / pathlib.Path('9-osm_open_areas.shp')
+    roads_path =  volume / pathlib.Path('10-osm_roads.shp')
 
-# =================
-# 1.2 Turn all shapefiles to raster
+    urban_aggl = gpd.read_file(str(urban_aggl_path))
+    open_areas = gpd.read_file(str(open_areas_path))
+    # reproject urban agglomeration to same projection as open areas
+    urban_aggl = urban_aggl.to_crs(open_areas.crs)
+    # urban_aggl = urban_aggl.assign(VALUE=1)
+    urban_aggl.to_file(str(urban_aggl_path)) # replace file
 
-print("Turning layers to raster ...")
+    # =================
+    # 1.2 Turn all shapefiles to raster
 
-rasterized = Feature_to_Raster(str(urban_aggl_path), (str(urban_aggl_path)[0:-4] + '.tif'), 1)
-print("done urban area file")
+    print("Turning layers to raster ...")
 
-rasterized = Feature_to_Raster(str(open_areas_path), (str(open_areas_path)[0:-4] + '.tif'), 1)
-print("done OSM open areas file")
+    rasterized = Feature_to_Raster(str(urban_aggl_path), (str(urban_aggl_path)[0:-4] + '.tif'), 1)
+    print("done urban area file")
 
-rasterized = Feature_to_Raster(str(roads_path), (str(roads_path)[0:-4] + '.tif'), 1)
-print("done OSM roads file")
+    rasterized = Feature_to_Raster(str(open_areas_path), (str(open_areas_path)[0:-4] + '.tif'), 1)
+    print("done OSM open areas file")
 
-print("done.")
+    rasterized = Feature_to_Raster(str(roads_path), (str(roads_path)[0:-4] + '.tif'), 1)
+    print("done OSM roads file")
 
-# =================
-# 1.3 Mask to urban extent
+    print("done.")
 
-print("Masking to urban extent ...")
+    # =================
+    # 1.3 Mask to urban extent
 
-coords = getFeatures(urban_aggl)
+    print("Masking to urban extent ...")
 
-# open areas
-raster = rasterio.open(str(open_areas_path)[0:-4] + '.tif')
-out_meta = raster.meta.copy()  # Copy the metadata
-open_areas_ext, out_transform = rasterio.mask.mask(raster, coords, crop=True)
-out_meta.update({"driver": "GTiff", "height": open_areas_ext.shape[1], "width": open_areas_ext.shape[2],
-                 "transform": out_transform})
-# with rasterio.open(str(volume / pathlib.Path('test.tif')), "w", **out_meta) as dest:  # replace file with clipped one
-#     dest.write(open_areas_ext)
+    coords = getFeatures(urban_aggl)
 
-# land allocated to streets
-raster = rasterio.open(str(roads_path)[0:-4] + '.tif')
-out_meta = raster.meta.copy()  # Copy the metadata
-roads_ext, out_transform = rasterio.mask.mask(raster, coords, crop=True)
-out_meta.update({"driver": "GTiff", "height": roads_ext.shape[1], "width": open_areas_ext.shape[2],
-                 "transform": out_transform})
-# with rasterio.open(str(volume / pathlib.Path('test.tif')), "w", **out_meta) as dest:  # replace file with clipped one
-#     dest.write(roads_ext)
+    # open areas
+    raster = rasterio.open(str(open_areas_path)[0:-4] + '.tif')
+    out_meta = raster.meta.copy()  # Copy the metadata
+    open_areas_ext, out_transform = rasterio.mask.mask(raster, coords, crop=True)
+    out_meta.update({"driver": "GTiff", "height": open_areas_ext.shape[1], "width": open_areas_ext.shape[2],
+                     "transform": out_transform})
+    # with rasterio.open(str(volume / pathlib.Path('test.tif')), "w", **out_meta) as dest:  # replace file with clipped one
+    #     dest.write(open_areas_ext)
 
-# =================
-# 1.4 calculate total surface of open areas and roads in urban agglomeration
+    # land allocated to streets
+    raster = rasterio.open(str(roads_path)[0:-4] + '.tif')
+    out_meta = raster.meta.copy()  # Copy the metadata
+    roads_ext, out_transform = rasterio.mask.mask(raster, coords, crop=True)
+    out_meta.update({"driver": "GTiff", "height": roads_ext.shape[1], "width": open_areas_ext.shape[2],
+                     "transform": out_transform})
+    # with rasterio.open(str(volume / pathlib.Path('test.tif')), "w", **out_meta) as dest:  # replace file with clipped one
+    #     dest.write(roads_ext)
 
-print("Calculating areas ...")
+    # =================
+    # 1.4 calculate total surface of open areas and roads in urban agglomeration
 
-# ALSO CREATE A TEXT FILE TO SAVE PRINTS!
-sys.stdout = open(str(directory / pathlib.Path('11-results.txt')), 'w')
+    print("Calculating areas ...")
 
-# count pixels that are =1
+    # ALSO CREATE A TEXT FILE TO SAVE PRINTS!
+    sys.stdout = open(str(directory / pathlib.Path('11-results.txt')), 'w')
 
-# open areas
-open_areas_pixels_sum = np.sum(open_areas_ext[0])
-open_areas_area = open_areas_pixels_sum / (1000*1000) # pixel size = 20m, calculate in square km
-print("TOTAL AREA OF OPEN AREAS: {x} square km".format(x=open_areas_area))
+    # count pixels that are =1
 
-# roads (land allocated to streets)
-LAS_pixels_sum = np.sum(roads_ext[0])
-LAS_area = LAS_pixels_sum / (1000*1000) # pixel size = 20m, calculate in square km
-print("TOTAL AREA OF LAND ALLOCATED TO STREETS: {x} square km".format(x=LAS_area))
+    # open areas
+    open_areas_pixels_sum = np.sum(open_areas_ext[0])
+    open_areas_area = open_areas_pixels_sum / (1000*1000) # pixel size = 20m, calculate in square km
+    print("TOTAL AREA OF OPEN AREAS: {x} square km".format(x=open_areas_area))
 
-# ================= ================= =================
+    # roads (land allocated to streets)
+    LAS_pixels_sum = np.sum(roads_ext[0])
+    LAS_area = LAS_pixels_sum / (1000*1000) # pixel size = 20m, calculate in square km
+    print("TOTAL AREA OF LAND ALLOCATED TO STREETS: {x} square km".format(x=LAS_area))
 
-# 2. calculate total surface of built-up area of the urban agglomeration
+    # ================= ================= =================
 
-# read raster as np array
-urb_bua = raster2array(str(urb_bua_path))
-urb_bua[0][urb_bua[0]!=1] = 0 # change the values because rasterio reads it as uint8
-# count pixels that are =1
-bua_pixels_sum = np.sum(urb_bua[0])
-bua_area = (bua_pixels_sum * (20 * 20)) / (1000*1000) # pixel size = 20m, calculate in square km
+    # 2. calculate total surface of built-up area of the urban agglomeration
 
-print("TOTAL BUILT-UP AREA OF URBAN AGGLOMERATION: {x} square km".format(x=bua_area))
+    # read raster as np array
+    urb_bua = raster2array(str(urb_bua_path))
+    urb_bua[0][urb_bua[0]!=1] = 0 # change the values because rasterio reads it as uint8
+    # count pixels that are =1
+    bua_pixels_sum = np.sum(urb_bua[0])
+    bua_area = (bua_pixels_sum * (20 * 20)) / (1000*1000) # pixel size = 20m, calculate in square km
 
-# ================= ================= =================
+    print("TOTAL BUILT-UP AREA OF URBAN AGGLOMERATION: {x} square km".format(x=bua_area))
 
-# 3 calculate final index
+    # ================= ================= =================
 
-i = ((open_areas_area + LAS_area) / bua_area) * 100
+    # 3 calculate final index
 
-print("Value for SDG indicator 11.7.1: {v} %".format(v=i))
+    i = ((open_areas_area + LAS_area) / bua_area) * 100
 
-print("----------")
-print("----------")
-print("Successfully finished process for SDG indicator 11.7.1 calculation.")
-print("----------")
-print("----------")
+    print("Value for SDG indicator 11.7.1: {v} %".format(v=i))
 
-sys.stdout.close()
+    print("----------")
+    print("----------")
+    print("Successfully finished process for SDG indicator 11.7.1 calculation.")
+    print("----------")
+    print("----------")
+
+    sys.stdout.close()
+
+if __name__ == '__main__':
+    main()

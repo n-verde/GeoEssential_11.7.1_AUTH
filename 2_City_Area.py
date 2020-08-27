@@ -26,19 +26,6 @@ import ogr
 import osr
 import geopandas as gpd
 
-# ================= SETTINGS =========================================
-# specify directory (volume conected via docker)
-# HRL tiles for all europe exist in this folder
-directory = 'volume'
-
-# specify AOI in the form of a shapefile
-shpName = 'aoi.shp'
-
-# specify HRL imperviousness mosaicked + clipped layer (to AOI)
-hrlName = '1-HRL_AOI.tif'
-# specify CLC clipped layer (to AOI)
-clcName = '2-CLC_AOI.tif'
-
 # ================= FUNCTIONS =========================================
 
 def raster2array(geotif_file):
@@ -199,144 +186,158 @@ def getFeatures(gdf):
     import json
     return [json.loads(gdf.to_json())['features'][0]['geometry']]
 
-# ================= MAIN PROGRAM ======================================
+def main():
 
-volume = pathlib.Path(directory)
-shp_file_path = volume / pathlib.Path(shpName)
-hrl_path = volume / pathlib.Path(hrlName)
-clc_path = volume / pathlib.Path(clcName)
+    # ================= SETTINGS =========================================
+    # specify directory (volume conected via docker)
+    directory = ''
+    # specify AOI in the form of a shapefile
+    shpName = 'aoi.shp'
+    # specify HRL imperviousness mosaicked + clipped layer (to AOI)
+    hrlName = '1-HRL_AOI.tif'
+    # specify CLC clipped layer (to AOI)
+    clcName = '2-CLC_AOI.tif'
 
-clc = raster2array(str(clc_path))
-hrl = raster2array(str(hrl_path))
+    # ================= MAIN PROGRAM ======================================
+    volume = pathlib.Path(directory)
+    shp_file_path = volume / pathlib.Path(shpName)
+    hrl_path = volume / pathlib.Path(hrlName)
+    clc_path = volume / pathlib.Path(clcName)
 
-print("Masking areas in CLC that do not belong to urban areas ...")
+    clc = raster2array(str(clc_path))
+    hrl = raster2array(str(hrl_path))
 
-# mask (with 0) classes that are not of interest
-# keep classes 1,2,3,10,11
-clc_urban = copy.copy(clc[0])
-clc_urban = np.where((clc[0]<=3),clc_urban,0)
-clc_urban = np.where((clc[0]==10),clc[0],clc_urban)
-clc_urban = np.where((clc[0]==11),clc[0],clc_urban)
+    print("Masking areas in CLC that do not belong to urban areas ...")
 
-profile = clc[1]
+    # mask (with 0) classes that are not of interest
+    # keep classes 1,2,3,10,11
+    clc_urban = copy.copy(clc[0])
+    clc_urban = np.where((clc[0]<=3),clc_urban,0)
+    clc_urban = np.where((clc[0]==10),clc[0],clc_urban)
+    clc_urban = np.where((clc[0]==11),clc[0],clc_urban)
 
-# export processed CLC raster with urban classes
-with rasterio.open(str(volume / '3-CLC_AOI_urban.tif') , 'w', **profile) as dst:
-    dst.write_band(1, clc_urban)
+    profile = clc[1]
 
-print("done.")
+    # export processed CLC raster with urban classes
+    with rasterio.open(str(volume / '3-CLC_AOI_urban.tif') , 'w', **profile) as dst:
+        dst.write_band(1, clc_urban)
 
-print("Masking HRL imperviousness layer, based on CLC urban areas ...")
+    print("done.")
 
-reproject_image_to_master(str(hrl_path),str(volume / '3-CLC_AOI_urban.tif'))
-clc_res = raster2array(str(volume / '3-CLC_AOI_urban') + '_resampled.tif')
+    print("Masking HRL imperviousness layer, based on CLC urban areas ...")
 
-clc_hrl_urban = copy.copy(clc_res[0])
-clc_hrl_urban = np.where((clc_res[0]!=0),hrl[0],0)
-clc_hrl_urban = np.where((clc_hrl_urban!=0),1,0)
-clc_hrl_urban = clc_hrl_urban.astype('uint8')
+    reproject_image_to_master(str(hrl_path),str(volume / '3-CLC_AOI_urban.tif'))
+    clc_res = raster2array(str(volume / '3-CLC_AOI_urban') + '_resampled.tif')
 
-profile = hrl[1]
+    clc_hrl_urban = copy.copy(clc_res[0])
+    clc_hrl_urban = np.where((clc_res[0]!=0),hrl[0],0)
+    clc_hrl_urban = np.where((clc_hrl_urban!=0),1,0)
+    clc_hrl_urban = clc_hrl_urban.astype('uint8')
 
-# export processed CLC raster with urban classes
-with rasterio.open(str(volume / '4-CLC_HRL_AOI_urban.tif') , 'w', **profile) as dst:
-    dst.write_band(1, clc_hrl_urban)
+    profile = hrl[1]
 
-del clc_urban, hrl
+    # export processed CLC raster with urban classes
+    with rasterio.open(str(volume / '4-CLC_HRL_AOI_urban.tif') , 'w', **profile) as dst:
+        dst.write_band(1, clc_hrl_urban)
 
-print("done.")
+    del clc_urban, hrl
 
-""""
-Assess the level of urban-ness for each of the resultant built-up pixels. 
-Place a 1-km2 circle around each built-up pixel and calculate the share of pixels in the circle that are also built-up.
-If >=50% of the pixels in the circle are built-up, the pixel is classified as Urban. If >=25% and <50% of the pixels in
-the circle are built-up, the pixel is classified as Suburban. If <25% of the pixels in the circle are built-up, the 
-pixel is classified as Rural.
-Combine contiguous urban and suburban pixels to form an urban cluster of the built-up area.
-"""
+    print("done.")
 
-print("Finding level of urban-ness with walking window and UN instructions ...")
+    """"
+    Assess the level of urban-ness for each of the resultant built-up pixels. 
+    Place a 1-km2 circle around each built-up pixel and calculate the share of pixels in the circle that are also built-up.
+    If >=50% of the pixels in the circle are built-up, the pixel is classified as Urban. If >=25% and <50% of the pixels in
+    the circle are built-up, the pixel is classified as Suburban. If <25% of the pixels in the circle are built-up, the 
+    pixel is classified as Rural.
+    Combine contiguous urban and suburban pixels to form an urban cluster of the built-up area.
+    """
 
-# 1km is 50 pixels in the 20m-pixel size of HRL
-# create a kernel of 50 pixels
-kernel = np.ones((50,50),np.uint32)
+    print("Finding level of urban-ness with walking window and UN instructions ...")
 
-# cast img to np.uint32
-img32 = clc_hrl_urban.astype(np.uint32)
+    # 1km is 50 pixels in the 20m-pixel size of HRL
+    # create a kernel of 50 pixels
+    kernel = np.ones((50,50),np.uint32)
 
-# do the convolution to get neighborhood sum
-c = convolve(img32, kernel, mode='constant')
+    # cast img to np.uint32
+    img32 = clc_hrl_urban.astype(np.uint32)
 
-# in the binary built-up image, 100% built-up means neighborhood sum for each pixel = 2500
-# >=25% means sum 2500/4 >= 500
-# threshold to 500 to get urban cluster
-thresh = copy.copy(c)
-thresh[thresh<500] = 0
-del c, img32
+    # do the convolution to get neighborhood sum
+    c = convolve(img32, kernel, mode='constant')
 
-print("done.")
+    # in the binary built-up image, 100% built-up means neighborhood sum for each pixel = 2500
+    # >=25% means sum 2500/4 >= 500
+    # threshold to 500 to get urban cluster
+    thresh = copy.copy(c)
+    thresh[thresh<500] = 0
+    del c, img32
 
-print("Finding city extents ...")
+    print("done.")
 
-# for city area (urban cluster) by combining contiguous pixels and find largest area in AOI
-# use openCV + gdal
+    print("Finding city extents ...")
 
-# to get outer boundary only:
-# 1) first threshold
+    # for city area (urban cluster) by combining contiguous pixels and find largest area in AOI
+    # use openCV + gdal
 
-thresh8 = rescaleToUnint8(thresh)
-ret, th = cv2.threshold(thresh8,0,255,cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)
-# invert values because with threshold city turns up as 0
-th_inv = copy.copy(th)
-th_inv[th_inv==255] = 5
-th_inv[th_inv==0] = 1
-th_inv[th_inv==5] = 0
-th_inv = th_inv.astype('uint8')
-profile['dtype'] = th_inv.dtype
-with rasterio.open(str(volume / '5-thres.tif') , 'w', **profile) as dst:
-    dst.write_band(1, th_inv)
-del th
+    # to get outer boundary only:
+    # 1) first threshold
 
-# polygonize boundaries with gdal
+    thresh8 = rescaleToUnint8(thresh)
+    ret, th = cv2.threshold(thresh8,0,255,cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)
+    # invert values because with threshold city turns up as 0
+    th_inv = copy.copy(th)
+    th_inv[th_inv==255] = 5
+    th_inv[th_inv==0] = 1
+    th_inv[th_inv==5] = 0
+    th_inv = th_inv.astype('uint8')
+    profile['dtype'] = th_inv.dtype
+    with rasterio.open(str(volume / '5-thres.tif') , 'w', **profile) as dst:
+        dst.write_band(1, th_inv)
+    del th
 
-raster_path = str(volume / '5-thres.tif')
-shapefile_path = str(volume / '6-polygonized.shp')
+    # polygonize boundaries with gdal
 
-doit = polygonize(raster_path, shapefile_path)
+    raster_path = str(volume / '5-thres.tif')
+    shapefile_path = str(volume / '6-polygonized.shp')
 
-print("done.")
+    doit = polygonize(raster_path, shapefile_path)
 
-print("Finding basic urban cluster (largest city area in AOI) ...")
+    print("done.")
 
-# find largest polygon in shapefile --->
+    print("Finding basic urban cluster (largest city area in AOI) ...")
 
-shp = gpd.read_file(shapefile_path)
+    # find largest polygon in shapefile --->
 
-# find largest poly in multipolygons
-city = max(shp['geometry'], key=lambda a: a.area)
+    shp = gpd.read_file(shapefile_path)
 
-# export
-city_gdf = gpd.GeoDataFrame(crs=shp.crs, geometry=[city])
-exportString = volume / pathlib.Path('7-bounds.shp')
-city_gdf.to_file(str(exportString))
+    # find largest poly in multipolygons
+    city = max(shp['geometry'], key=lambda a: a.area)
 
-print("done.")
+    # export
+    city_gdf = gpd.GeoDataFrame(crs=shp.crs, geometry=[city])
+    exportString = volume / pathlib.Path('7-bounds.shp')
+    city_gdf.to_file(str(exportString))
 
-print("Finding built-up area of urban cluster ...")
+    print("done.")
 
-# clip HRL/CLC to city area to get urban cluster
+    print("Finding built-up area of urban cluster ...")
 
-raster = rasterio.open(str(volume / '4-CLC_HRL_AOI_urban.tif'))
-raster_crs = raster.crs
-coords = getFeatures(city_gdf)
+    # clip HRL/CLC to city area to get urban cluster
 
-# clip HRL built-up area to city extension
-out_meta = raster.meta.copy()  # Copy the metadata
-epsg_code = int(raster.crs.data['init'][5:])  # Parse EPSG code
-out_img, out_transform = rasterio.mask.mask(raster, coords, crop=True)
-out_meta.update({"driver": "GTiff", "height": out_img.shape[1], "width": out_img.shape[2],
-                 "transform": out_transform})
-with rasterio.open(str(volume / pathlib.Path('8-URBAN_CLUSTER_BUA.tif')), "w", **out_meta) as dest:  # replace file with clipped one
-    dest.write(out_img)
+    raster = rasterio.open(str(volume / '4-CLC_HRL_AOI_urban.tif'))
+    raster_crs = raster.crs
+    coords = getFeatures(city_gdf)
 
-print("done.")
+    # clip HRL built-up area to city extension
+    out_meta = raster.meta.copy()  # Copy the metadata
+    epsg_code = int(raster.crs.data['init'][5:])  # Parse EPSG code
+    out_img, out_transform = rasterio.mask.mask(raster, coords, crop=True)
+    out_meta.update({"driver": "GTiff", "height": out_img.shape[1], "width": out_img.shape[2],
+                     "transform": out_transform})
+    with rasterio.open(str(volume / pathlib.Path('8-URBAN_CLUSTER_BUA.tif')), "w", **out_meta) as dest:  # replace file with clipped one
+        dest.write(out_img)
+
+    print("done.")
+
+if __name__ == '__main__':
+    main()
