@@ -168,12 +168,12 @@ def main():
 
     # open areas
     open_areas_pixels_sum = np.sum(open_areas_ext[0])
-    open_areas_area = open_areas_pixels_sum / (1000*1000) # pixel size = 20m, calculate in square km
+    open_areas_area = open_areas_pixels_sum / (1000*1000) # pixel size = 1m, calculate in square km
     print("TOTAL AREA OF OPEN AREAS: {x} square km".format(x=open_areas_area))
 
     # roads (land allocated to streets)
     LAS_pixels_sum = np.sum(roads_ext[0])
-    LAS_area = LAS_pixels_sum / (1000*1000) # pixel size = 20m, calculate in square km
+    LAS_area = LAS_pixels_sum / (1000*1000) # pixel size = 1m, calculate in square km
     print("TOTAL AREA OF LAND ALLOCATED TO STREETS: {x} square km".format(x=LAS_area))
 
     # ================= ================= =================
@@ -185,7 +185,7 @@ def main():
     urb_bua[0][urb_bua[0]!=1] = 0 # change the values because rasterio reads it as uint8
     # count pixels that are =1
     bua_pixels_sum = np.sum(urb_bua[0])
-    bua_area = (bua_pixels_sum * (20 * 20)) / (1000*1000) # pixel size = 20m, calculate in square km
+    bua_area = (bua_pixels_sum * (10 * 10)) / (1000*1000) # pixel size = 10m, calculate in square km
 
     print("TOTAL BUILT-UP AREA OF URBAN AGGLOMERATION: {x} square km".format(x=bua_area))
 
