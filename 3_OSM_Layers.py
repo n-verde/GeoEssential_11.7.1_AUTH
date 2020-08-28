@@ -92,9 +92,6 @@ def main():
      way["place"="square"]({s});
      rel["place"="square"]({s});
      
-     way["place"="square"]({s});
-     rel["place"="square"]({s});
-     
      way["landuse"="recreation_ground"]({s});
      rel["landuse"="recreation_ground"]({s});
      
@@ -123,8 +120,11 @@ def main():
                 lat = point['lat']
                 lon_list.append(lon)
                 lat_list.append(lat)
-            poly_geom = shapely.geometry.Polygon(zip(lon_list, lat_list)) # create polygon geometry
-            polygons.append(poly_geom) # add polygon to list
+            if (len(lon_list)<3):
+                continue
+            else:
+                poly_geom = shapely.geometry.Polygon(zip(lon_list, lat_list)) # create polygon geometry
+                polygons.append(poly_geom) # add polygon to list
 
     # POLYGONS ----
     union = cascaded_union(polygons)

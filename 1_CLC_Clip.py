@@ -46,11 +46,7 @@ def main():
         f.write(r.content)
     clc_path = pathlib.Path(CLC_fileName)
 
-    # -------------------------
     # ---------- CLC ----------
-
-    dir_name = clc_path
-
     print('Check if CLC intersects with AOI ...')
 
     # make sure AOI shapefile intersects CLC layer

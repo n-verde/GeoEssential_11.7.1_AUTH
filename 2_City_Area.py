@@ -206,6 +206,7 @@ def main():
 
     clc = raster2array(str(clc_path))
     hrl = raster2array(str(hrl_path))
+    HRLpixelSize = round(hrl[1]['transform'][0])
 
     print("Masking areas in CLC that do not belong to urban areas ...")
 
@@ -255,9 +256,10 @@ def main():
 
     print("Finding level of urban-ness with walking window and UN instructions ...")
 
-    # 1km is 100 pixels in the 10m-pixel size of HRL
-    # create a kernel of 100 pixels
-    kernel = np.ones((100,100),np.uint32)
+    # create a kernel of 1km in x pixels
+    # eg. 1km is 50 pixels in the 20m-pixel size of HRL
+    kernelSize = int(1000/HRLpixelSize)
+    kernel = np.ones((kernelSize,kernelSize),np.uint32)
 
     # cast img to np.uint32
     img32 = clc_hrl_urban.astype(np.uint32)
@@ -265,11 +267,14 @@ def main():
     # do the convolution to get neighborhood sum
     c = convolve(img32, kernel, mode='constant')
 
-    # in the binary built-up image, 100% built-up means neighborhood sum for each pixel = 10000
-    # >=25% means sum 10000/4 >= 2500
-    # threshold to 2500 to get urban cluster
+    # get >=25% threshold for built-up image
+    # eg. in the binary built-up image, 100% built-up means neighborhood sum for each pixel = 2500
+    #       >=25% means sum 2500/4 >= 625
+    #       so threshold to 625 to get urban cluster
+    perc100 = kernelSize*kernelSize
+    percLarger25 = perc100/4
     thresh = copy.copy(c)
-    thresh[thresh<2500] = 0
+    thresh[thresh < int(round(percLarger25))] = 0
     del c, img32
 
     print("done.")

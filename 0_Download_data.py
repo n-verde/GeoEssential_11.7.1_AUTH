@@ -55,19 +55,36 @@ def main():
     # ArcGIS Configuration parameteres (settings)
     ArcGISserver = {"url": "https://image.discomap.eea.europa.eu",  # Image server
                     "bboxSR": 3035,  # bbox CRS
-                    # "widthpixels": 1000,
-                    # "heightpixels": 1000,
                     "imageSR": 3035,  # exported image CRS
                     "Imperviousness2018": "GioLandPublic/HRL_ImperviousnessDensity_2018/ImageServer"
                     }
 
     def get_shape_from_rest(xmin, ymin, xmax, ymax, pixelSize, filename, service_name):
+
+        # ARCGIS REST service has a limit of 4000 pixels. If pixelSize requires more than 4000 pixels, lower the resolution
+        width = round((xmax-xmin)/pixelSize)
+        height = round((ymax-ymin)/pixelSize)
+        if ((width > 4000) or (height > 4000)):
+            pixelSize = 20  # try for 20m pixel size
+            width = round((xmax - xmin) / pixelSize)
+            height = round((ymax - ymin) / pixelSize)
+            print("Changed pixel size from 10m to 20m because of WMS request size limitation ...")
+            if ((width > 4000) or (height > 4000)):
+                pixelSize = 30  # try for 30m pixel size
+                width = round((xmax - xmin) / pixelSize)
+                height = round((ymax - ymin) / pixelSize)
+                print("Changed pixel size from 10m to 30m because of WMS request size limitation ...")
+                if ((width > 4000) or (height > 4000)):
+                    # UN instructions require pixel size <= 30m (Landsat imagery equivalent)
+                    print("ERROR: Area is too large for WMS request. Choose a smaller area.")
+                    return
+
         # Parameters
         ArcGIS_server_url = ArcGISserver['url']
         Servicename = ArcGISserver[service_name]
         bboxSR = ArcGISserver['bboxSR']
-        widthpixels = round((xmax-xmin)/pixelSize)  # overwrite default values to get correct pixel size
-        heightpixels = round((ymax-ymin)/pixelSize)  # overwrite default values to get correct pixel size
+        widthpixels = width
+        heightpixels = height
         imageSR = ArcGISserver['imageSR']
 
         # secured url
@@ -88,14 +105,14 @@ def main():
 
         ResponseObj = response.read()
 
-        out = open(str(pathlib.Path(filename + '.tif')), "wb")
+        out = open(str(directory / pathlib.Path(filename + '.tif')), "wb")
         out.write(ResponseObj)
         out.close()
 
     print("Getting HRL Imperviousness 2018 from WMS for ΑΟΙ ...")
 
     # run the function to get Imperviousness density 2018 for the AOI
-    # 10m spatial resolution
+    # TAKE 20m SPATIAL RESOLUTION INSTEAD OF 10m BECAUSE OTHERWISE WMS CRASHES FOR LARGE AREAS (4000 PIXEL LIMIT)
     get_shape_from_rest(bboxArray[0], bboxArray[1], bboxArray[2], bboxArray[3], 10, "1-HRL_AOI", "Imperviousness2018")
 
     print("done.")

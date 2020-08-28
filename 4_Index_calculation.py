@@ -190,10 +190,11 @@ def main():
 
     # read raster as np array
     urb_bua = raster2array(str(urb_bua_path))
+    pixelSize = int(round(urb_bua[1]['transform'][0])) # pixel size = x meters (depending on WMS request)
     urb_bua[0][urb_bua[0]!=1] = 0 # change the values because rasterio reads it as uint8
     # count pixels that are =1
     bua_pixels_sum = np.sum(urb_bua[0])
-    bua_area = (bua_pixels_sum * (10 * 10)) / (1000*1000)  # pixel size = 10m, calculate in square km
+    bua_area = (bua_pixels_sum * (pixelSize * pixelSize)) / (1000*1000)  # calculate in square km
 
     print("TOTAL BUILT-UP AREA OF URBAN AGGLOMERATION: {x} square km".format(x=bua_area))
 
