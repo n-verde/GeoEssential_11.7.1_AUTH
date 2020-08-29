@@ -238,7 +238,14 @@ def main():
                 lat_list.append(lat)
             for tag in element['tags']:
                 if tag == 'lanes': # for roads which 'lanes' are known, and thus approx. width can be calculated
-                    lanes = float(element['tags']['lanes'])
+                    fullstring = element['tags']['lanes']
+                    substring = ";"  # sometimes the 'lanes' field contains more than one number, separated with ';'
+                    if substring in fullstring:
+                        stringList = fullstring.split(substring)
+                        numList = [float(i) for i in stringList]
+                        lanes = sum(numList)
+                    else:
+                        lanes = float(fullstring)
                     width = lanes * 3
                 else:  # otherwise, assume roads have one lane
                     width = 3
