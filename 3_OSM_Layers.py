@@ -15,15 +15,12 @@
 # ============== IMPORTS =============================================
 import pathlib
 import requests
-import geojson
 import geopandas as gpd
 import shapely.geometry
 import shapely.wkt
 from shapely.ops import cascaded_union
-import utm_zone
 import pyproj
 from shapely.ops import transform
-
 
 def main():
 
@@ -45,13 +42,6 @@ def main():
 
     # get the bounding box
     bbox = shapefile_transformed.total_bounds
-
-    # find in which utm zone AOI is (will be used later for buffer)
-    shapefile.to_file(str(volume / pathlib.Path(shpName)) + '.geojson', driver='GeoJSON') # export shp as geojson
-    geojson_aoi_path = str(volume / pathlib.Path(shpName)) + '.geojson'
-    with open(geojson_aoi_path) as f:
-        gj = geojson.load(f) # read geojson
-    utm_epsg_code = utm_zone.epsg(gj) # find geojson utm epsg code
 
     # ---------- DO THE QUERY TO GET OPEN AREAS OSM DATA ----------
     # Overpass API uses a custom query language to define queries
@@ -127,7 +117,7 @@ def main():
     union = cascaded_union(polygons)
     multi_polygon = gpd.GeoDataFrame(crs='epsg:4326', geometry=[union])
     # reproject to UTM
-    multi_polygon_utm = multi_polygon.to_crs('epsg:' + str(utm_epsg_code))  # utm epsg code for AOI)
+    multi_polygon_utm = multi_polygon.to_crs('epsg:' + '3035')  # utm epsg code for AOI)
     # export OSM polygons
     exportString = volume / pathlib.Path('9-osm_open_areas.shp')
     multi_polygon_utm.to_file(str(exportString))
@@ -214,7 +204,7 @@ def main():
     print('Buffering road network in order to find land allocated to streets ...')
 
     # in order to apply buffer to road network, must reproject to projected CRS
-    s = 'epsg:' + str(utm_epsg_code)  # utm epsg code for AOI
+    s = 'epsg:' + '3035'  # utm epsg code for AOI
     projectToUTM = pyproj.Transformer.from_proj(
         pyproj.Proj('epsg:4326'),  # OSM coordinate system
         pyproj.Proj(s))  # utm coordinate system
@@ -258,7 +248,7 @@ def main():
     # POLYGONS ----
     union = cascaded_union(polygons)
     multi_polygon = gpd.GeoDataFrame(crs='epsg:4326', geometry=[union])
-    multi_polygon_utm = multi_polygon.to_crs('epsg:' + str(utm_epsg_code))  # utm epsg code for AOI)
+    multi_polygon_utm = multi_polygon.to_crs('epsg:' + '3035')  # utm epsg code for AOI)
     # export OSM polygons
     exportString = volume / pathlib.Path('10-osm_roads.shp')
     multi_polygon_utm.to_file(str(exportString))
