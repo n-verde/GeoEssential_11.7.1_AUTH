@@ -83,9 +83,6 @@ def main():
      way["leisure"="playground"]({s});
      rel["leisure"="playground"]({s});
      
-     way["leisure"="garden"]({s});
-     rel["leisure"="garden"]({s});
-     
      way["leisure"="nature_reserve"]({s});
      rel["leisure"="nature_reserve"]({s});
     
