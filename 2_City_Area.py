@@ -17,6 +17,7 @@ import copy
 import sys
 
 import numpy as np
+import math
 import rasterio
 from rasterio.mask import mask
 import gdal
@@ -256,9 +257,17 @@ def main():
 
     print("Finding level of urban-ness with walking window and UN instructions ...")
 
+    # kernel according to UN instructions should be 1km2 in area
+    # the kernel is always a square so with basic trigonometry we can find the size of the kernel
+    # A = πr^2 and r^2 + r^2 = a^2
+    r = math.sqrt(1/math.pi) # km
+    aKm = math.sqrt(math.pow(r,2)+math.pow(r,2)) # km
+    a = aKm * 1000 # m
+
+
     # create a kernel of 1km in x pixels
     # eg. 1km is 50 pixels in the 20m-pixel size of HRL
-    kernelSize = int(1000/HRLpixelSize)
+    kernelSize = int(a/HRLpixelSize)
     kernel = np.ones((kernelSize,kernelSize),np.uint32)
 
     # cast img to np.uint32

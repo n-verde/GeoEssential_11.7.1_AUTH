@@ -28,7 +28,7 @@ def main():
     # specify directory (volume conected via docker)
     directory = ''
     # specify AOI in the form of a shapefile
-    shpName = 'aoi.shp'
+    shpName = '7-bounds.shp'
 
     # ================= MAIN PROGRAM ======================================
 

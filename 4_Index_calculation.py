@@ -17,6 +17,7 @@ import rasterio
 from rasterio.mask import mask
 import numpy as np
 import geopandas as gpd
+from shapely.ops import cascaded_union
 import gdal
 import ogr
 
@@ -100,7 +101,7 @@ def main():
 
     # ================= ================= =================
 
-    # 1. calculate total surface of open public space + land allocated to streets
+    # 1. calculate total surface of open public space + land allocated to streets (LAS)
 
     # =================
     # 1.1 reproject urban_aggl to match OSM files
@@ -110,10 +111,26 @@ def main():
 
     urban_aggl = gpd.read_file(str(urban_aggl_path))
     open_areas = gpd.read_file(str(open_areas_path))
+    roads = gpd.read_file(str(roads_path))
+
     # reproject urban agglomeration to same projection as open areas
     urban_aggl = urban_aggl.to_crs(open_areas.crs)
     # urban_aggl = urban_aggl.assign(VALUE=1)
     urban_aggl.to_file(str(urban_aggl_path)) # replace file
+
+    # merge & union open areas and LAS because in some cases roads appear on open spaces
+    # used for calculating area
+    polygons = [roads.geometry[0], open_areas.geometry[0]]
+    boundary = gpd.GeoSeries(cascaded_union(polygons))
+    LAS_openAreas = gpd.GeoDataFrame(crs='epsg:3035', geometry=[boundary.geometry[0]])
+
+    # clip roads from open areas
+    #used for exporting roads
+    roads_clean_geom = roads.geometry[0].difference(open_areas.geometry[0])
+    roads_clean = gpd.GeoDataFrame(crs='epsg:3035', geometry=[roads_clean_geom])
+    # export "cleaned" roads (roads except roads in open areas)
+    exportString = roads_path
+    roads_clean.to_file(str(exportString))
 
     # =================
     # 1.2 Turn all shapefiles to raster
@@ -144,7 +161,7 @@ def main():
     open_areas_ext, out_transform = rasterio.mask.mask(raster, coords, crop=True)
     out_meta.update({"driver": "GTiff", "height": open_areas_ext.shape[1], "width": open_areas_ext.shape[2],
                      "transform": out_transform})
-    with rasterio.open(str(volume / pathlib.Path(str(open_areas_path)[0:-4] + '.tif')), "w", **out_meta) as dest:  # replace file with clipped one
+    with rasterio.open(str(open_areas_path)[0:-4] + '.tif', "w", **out_meta) as dest:  # replace file with clipped one
         dest.write(open_areas_ext)
 
     # land allocated to streets
@@ -153,7 +170,7 @@ def main():
     roads_ext, out_transform = rasterio.mask.mask(raster, coords, crop=True)
     out_meta.update({"driver": "GTiff", "height": roads_ext.shape[1], "width": open_areas_ext.shape[2],
                      "transform": out_transform})
-    with rasterio.open(str(volume / pathlib.Path(str(roads_path)[0:-4] + '.tif')), "w", **out_meta) as dest:  # replace file with clipped one
+    with rasterio.open(str(roads_path)[0:-4] + '.tif', "w", **out_meta) as dest:  # replace file with clipped one
         dest.write(roads_ext)
 
     # =================
